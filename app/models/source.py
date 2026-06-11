@@ -1,7 +1,7 @@
 from datetime import datetime
 
 from sqlalchemy import String, DateTime
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from app.core.database import Base
 
@@ -11,9 +11,13 @@ class Source(Base):
 
     id: Mapped[int] = mapped_column(primary_key=True)
 
-    name: Mapped[str] = mapped_column(String(255))
+    name: Mapped[str] = mapped_column(
+        String(255)
+    )
 
-    source_type: Mapped[str] = mapped_column(String(50))
+    source_type: Mapped[str] = mapped_column(
+        String(50)
+    )
 
     source_url: Mapped[str | None] = mapped_column(
         String(1000),
@@ -29,4 +33,10 @@ class Source(Base):
         DateTime,
         default=datetime.utcnow,
         onupdate=datetime.utcnow
+    )
+
+    documents = relationship(
+        "Document",
+        back_populates="source",
+        cascade="all, delete-orphan"
     )
