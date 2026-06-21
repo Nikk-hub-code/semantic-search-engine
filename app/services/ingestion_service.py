@@ -10,7 +10,9 @@ from app.services.embedding_service import (
     EmbeddingService
 )
 
-from app.utils.text_splitter import split_text
+from app.utils.text_splitter import (
+    TextSplitterService
+)
 
 
 class IngestionService:
@@ -30,7 +32,7 @@ class IngestionService:
         file_path: str,
         source_name: str | None = None,
         chunk_size: int = 500,
-        chunk_overlap: int = 50
+        chunk_overlap: int = 100
     ):
         """
         Ingest a text file into the database.
@@ -66,12 +68,14 @@ class IngestionService:
         ) as file:
             text = file.read()
 
-        # Split text into chunks
-        chunks = split_text(
-            text=text,
+        # Initialize splitter
+        splitter = TextSplitterService(
             chunk_size=chunk_size,
             chunk_overlap=chunk_overlap
         )
+
+        # Split text into structured chunks
+        chunks = splitter.split_text(text)
 
         # Create source
         source = self.source_repo.create_source(
@@ -92,25 +96,30 @@ class IngestionService:
             )
         )
 
-        # Generate embeddings + store chunks
+        # Generate embeddings + prepare chunk data
         chunks_data = []
 
-        for index, chunk_text in enumerate(chunks):
+        for chunk in chunks:
 
             embedding = (
                 self.embedding_service
-                .generate_embedding(chunk_text)
+                .generate_embedding(
+                    chunk["content"]
+                )
             )
 
             chunks_data.append(
                 {
                     "document_id": document.id,
-                    "chunk_index": index,
-                    "content": chunk_text,
+                    "chunk_index": chunk["chunk_index"],
+                    "content": chunk["content"],
+                    "start_char": chunk["start_char"],
+                    "end_char": chunk["end_char"],
                     "embedding": embedding
                 }
             )
 
+        # Store chunks
         self.chunk_repo.bulk_create_chunks(
             chunks_data
         )

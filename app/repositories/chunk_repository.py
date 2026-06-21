@@ -11,12 +11,19 @@ class ChunkRepository:
         self,
         document_id: int,
         chunk_index: int,
-        content: str
+        content: str,
+        start_char: int | None = None,
+        end_char: int | None = None,
+        embedding: list[float] | None = None
     ) -> Chunk:
+
         chunk = Chunk(
             document_id=document_id,
             chunk_index=chunk_index,
-            content=content
+            content=content,
+            start_char=start_char,
+            end_char=end_char,
+            embedding=embedding
         )
 
         self.db.add(chunk)
@@ -54,6 +61,7 @@ class ChunkRepository:
         self,
         document_id: int
     ) -> int:
+
         deleted_count = (
             self.db.query(Chunk)
             .filter(Chunk.document_id == document_id)

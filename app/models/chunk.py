@@ -1,7 +1,17 @@
 from datetime import datetime
 
-from sqlalchemy import ForeignKey, Text, DateTime
-from sqlalchemy.orm import Mapped, mapped_column, relationship
+from sqlalchemy import (
+    ForeignKey,
+    Text,
+    DateTime,
+    Integer
+)
+
+from sqlalchemy.orm import (
+    Mapped,
+    mapped_column,
+    relationship
+)
 
 from pgvector.sqlalchemy import Vector
 
@@ -25,6 +35,18 @@ class Chunk(Base):
         Text
     )
 
+    # Character position tracking
+    start_char: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
+
+    end_char: Mapped[int | None] = mapped_column(
+        Integer,
+        nullable=True
+    )
+
+    # Vector embedding
     embedding: Mapped[list[float] | None] = mapped_column(
         Vector(384),
         nullable=True

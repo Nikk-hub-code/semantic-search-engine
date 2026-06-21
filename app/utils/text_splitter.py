@@ -1,43 +1,42 @@
-from typing import List
+from langchain_text_splitters import RecursiveCharacterTextSplitter
 
 
-def split_text(
-    text: str,
-    chunk_size: int = 500,
-    chunk_overlap: int = 50
-) -> List[str]:
-    """
-    Split text into overlapping chunks.
-
-    Args:
-        text: Input text to split.
-        chunk_size: Maximum size of each chunk.
-        chunk_overlap: Number of overlapping characters.
-
-    Returns:
-        List of text chunks.
-    """
-
-    if not text:
-        return []
-
-    if chunk_overlap >= chunk_size:
-        raise ValueError(
-            "chunk_overlap must be smaller than chunk_size"
+class TextSplitterService:
+    def __init__(
+        self,
+        chunk_size: int = 500,
+        chunk_overlap: int = 100
+    ):
+        self.splitter = RecursiveCharacterTextSplitter(
+            chunk_size=chunk_size,
+            chunk_overlap=chunk_overlap,
+            separators=[
+                "\n\n",
+                "\n",
+                ". ",
+                " ",
+                ""
+            ]
         )
 
-    chunks = []
-    start = 0
-    text_length = len(text)
+    def split_text(self, text: str):
+        raw_chunks = self.splitter.split_text(text)
 
-    while start < text_length:
-        end = start + chunk_size
+        chunks = []
 
-        chunk = text[start:end].strip()
+        current_position = 0
 
-        if chunk:
-            chunks.append(chunk)
+        for index, chunk in enumerate(raw_chunks):
+            start = text.find(chunk, current_position)
+            end = start + len(chunk)
 
-        start += chunk_size - chunk_overlap
+            chunks.append({
+                "chunk_index": index,
+                "content": chunk,
+                "start_char": start,
+                "end_char": end
+            })
 
-    return chunks
+            current_position = end
+
+        return chunks
